@@ -11,7 +11,7 @@ import logging
 import pandas as pd
 
 # Load API keys and database credentials from environment variables
-NYT_API_KEY = "8bN9gIv46rlmzaXXM00EJfOzwf6XxVQe"
+NYT_API_KEY =  os.getenv("NYTIMES_API_KEY")
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 DB_HOST = os.getenv("POSTGRES_HOST", "postgres")  # Use service name from Docker Compose
 DB_NAME = os.getenv("POSTGRES_DB", "books_db")
