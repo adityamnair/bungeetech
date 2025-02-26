@@ -1,0 +1,54 @@
+version: '3'
+services:
+  postgres:
+    image: postgres:13
+    container_name: postgres_container
+    restart: always
+    environment:
+      POSTGRES_DB: books_db
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  airflow:
+    image: apache/airflow:2.6.3
+    container_name: airflow_container
+    restart: always
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
+      - NYTIMES_API_KEY=${NYTIMES_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - POSTGRES_HOST=postgres  # Ensure this matches the service name
+      - POSTGRES_DB=books_db
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+    depends_on:
+      - postgres  # Ensure Airflow starts after PostgreSQL
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./reports:/opt/airflow/reports
+    ports:
+      - "8080:8080"
+    command: ["airflow", "standalone"]
+
+  streamlit:
+    image: python:3.9  # Use a lightweight Python image
+    container_name: streamlit_dashboard
+    restart: always
+    working_dir: /app
+    volumes:
+      - ./streamlit:/app  # Mount local directory with Streamlit app
+    ports:
+      - "8501:8501"
+    depends_on:
+      - postgres
+    command: >
+      sh -c "pip install streamlit pandas psycopg2 && streamlit run app.py --server.port=8501 --server.address=0.0.0.0"
+
+volumes:
+  postgres_data:
